@@ -2,7 +2,7 @@ import { GrabCardData } from "@/lib/types";
 import SmartBadge from "./SmartBadge";
 
 export default function GrabCard({ card }: { card: GrabCardData }) {
-  const redirectUrl = `/api/redirect?url=${encodeURIComponent(card.affiliateUrl)}&sid=${card.id}`;
+  const redirectUrl = card.affiliateUrl;
 
   return (
     <div className="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">

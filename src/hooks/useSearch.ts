@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SearchResponse } from "@/lib/types";
+import { performSearch } from "@/lib/search";
 
 export function useSearch() {
   const [results, setResults] = useState<SearchResponse | null>(null);
@@ -13,18 +14,7 @@ export function useSearch() {
     setError(null);
 
     try {
-      const res = await fetch("/api/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Search failed");
-      }
-
-      const data: SearchResponse = await res.json();
+      const data = await performSearch(query);
       setResults(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
