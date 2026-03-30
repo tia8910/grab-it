@@ -1,9 +1,5 @@
 import { Bucket } from "./types";
 
-/**
- * Classify a course into one of the four PRD buckets.
- * Hybrid takes priority because it represents the upsell opportunity.
- */
 export function classifyBucket(course: {
   isFree: boolean;
   hasCertificate: boolean;

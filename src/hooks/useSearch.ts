@@ -12,8 +12,9 @@ export function useSearch() {
   async function search(query: string) {
     setIsLoading(true);
     setError(null);
-
     try {
+      // Small delay to show loading state (simulates AI analysis)
+      await new Promise((r) => setTimeout(r, 800));
       const data = await performSearch(query);
       setResults(data);
     } catch (err) {

@@ -4,49 +4,52 @@ type BadgeVariant =
   | { type: "price"; value: PriceTag; amount?: number | null }
   | { type: "credential"; value: CredentialTag }
   | { type: "financial"; value: FinancialPath }
-  | { type: "rating"; value: number };
+  | { type: "rating"; value: number }
+  | { type: "provider"; value: string }
+  | { type: "offer"; value: string }
+  | { type: "students"; value: string };
 
-const COLORS: Record<string, string> = {
-  FREE: "bg-green-100 text-green-800",
-  PAID: "bg-amber-100 text-amber-800",
-  SUBSCRIPTION: "bg-blue-100 text-blue-800",
-  CERTIFIED: "bg-purple-100 text-purple-800",
-  KNOWLEDGE_ONLY: "bg-gray-100 text-gray-600",
-  AUDIT_AVAILABLE: "bg-teal-100 text-teal-800",
-  FINANCIAL_AID: "bg-emerald-100 text-emerald-800",
-  rating: "bg-yellow-100 text-yellow-800",
-};
-
-function getLabel(variant: BadgeVariant): string {
-  switch (variant.type) {
+function getLabel(v: BadgeVariant): string {
+  switch (v.type) {
     case "price":
-      if (variant.value === "FREE") return "FREE";
-      if (variant.value === "SUBSCRIPTION") return "SUBSCRIPTION";
-      return variant.amount ? `$${variant.amount.toFixed(2)}` : "PAID";
+      if (v.value === "FREE") return "FREE";
+      if (v.value === "SUBSCRIPTION") return "SUBSCRIPTION";
+      return v.amount ? `$${v.amount.toFixed(2)}` : "PAID";
     case "credential":
-      return variant.value === "CERTIFIED" ? "CERTIFIED" : "No Certificate";
+      return v.value === "CERTIFIED" ? "CERTIFIED" : "No Certificate";
     case "financial":
-      if (variant.value === "AUDIT_AVAILABLE") return "Audit Available";
-      if (variant.value === "FINANCIAL_AID") return "Financial Aid";
+      if (v.value === "AUDIT_AVAILABLE") return "Audit Available";
+      if (v.value === "FINANCIAL_AID") return "Financial Aid";
       return "";
-    case "rating":
-      return `★ ${variant.value}/5`;
+    case "rating": return `★ ${v.value}/5`;
+    case "provider": return v.value;
+    case "offer": return v.value;
+    case "students": return `${v.value}`;
   }
 }
 
-function getColor(variant: BadgeVariant): string {
-  if (variant.type === "rating") return COLORS.rating;
-  return COLORS[variant.value] || COLORS.KNOWLEDGE_ONLY;
+function getClass(v: BadgeVariant): string {
+  switch (v.type) {
+    case "price":
+      if (v.value === "FREE") return "badge-free";
+      if (v.value === "SUBSCRIPTION") return "badge-sub";
+      return "badge-paid";
+    case "credential": return v.value === "CERTIFIED" ? "badge-cert" : "badge-nocert";
+    case "financial":
+      if (v.value === "AUDIT_AVAILABLE") return "badge-audit";
+      return "badge-aid";
+    case "rating": return "badge-rating";
+    case "offer": return "bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold";
+    case "provider": return "bg-gray-800 text-white";
+    case "students": return "bg-gray-100 text-gray-600";
+  }
 }
 
 export default function SmartBadge({ variant }: { variant: BadgeVariant }) {
   const label = getLabel(variant);
   if (!label) return null;
-
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getColor(variant)}`}
-    >
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${getClass(variant)}`}>
       {label}
     </span>
   );
