@@ -12,13 +12,19 @@ import AffiliateFooter from "@/components/AffiliateFooter";
 import { useSearch } from "@/hooks/useSearch";
 import { Bucket, GrabCardData, Lang } from "@/lib/types";
 import { t } from "@/lib/i18n";
+import { trackSearch } from "@/lib/analytics";
 
 export default function Home() {
-  const { results, isLoading, error, search } = useSearch();
+  const { results, isLoading, error, search: rawSearch } = useSearch();
   const [lang, setLang] = useState<Lang>("en");
   const [filters, setFilters] = useState<Filters>({
-    price: "all", certificate: "all", sortBy: "value",
+    price: "all", certificate: "all", category: "all", level: "all", sortBy: "value",
   });
+
+  const search = (q: string) => {
+    rawSearch(q);
+    trackSearch(q, 0);
+  };
 
   const filteredResults = results ? applyFilters(results.results, filters) : null;
 
@@ -31,8 +37,7 @@ export default function Home() {
         <div className="particle absolute left-[40%] top-[60%] h-1.5 w-1.5" style={{ animationDelay: "6s" }} />
         <div className="particle absolute left-[85%] top-[50%] h-2.5 w-2.5" style={{ animationDelay: "9s" }} />
 
-        <div className="relative z-10 mx-auto max-w-5xl">
-          {/* Nav */}
+        <div className="relative z-10 mx-auto max-w-6xl">
           <nav className="mb-8 flex items-center justify-between sm:mb-12">
             <Logo lang={lang} />
             <div className="flex items-center gap-2 sm:gap-4">
@@ -45,7 +50,6 @@ export default function Home() {
               <a href="#resume" className="hidden text-sm font-medium text-purple-200 transition-colors hover:text-white sm:block">
                 {t("nav.resume", lang)}
               </a>
-              {/* Language toggle */}
               <button
                 onClick={() => setLang(lang === "en" ? "ar" : "en")}
                 className="rounded-full border border-purple-400/30 bg-white/10 px-3 py-1.5 text-xs font-bold text-white backdrop-blur transition-all hover:bg-white/20"
@@ -55,7 +59,6 @@ export default function Home() {
             </div>
           </nav>
 
-          {/* Hero Content */}
           <div className="mb-8 text-center sm:mb-10">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs text-purple-200 sm:px-4 sm:py-1.5 sm:text-sm">
               <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-400" />
@@ -71,17 +74,15 @@ export default function Home() {
             <p className="text-xs text-purple-300/60 sm:text-sm">{t("hero.desc", lang)}</p>
           </div>
 
-          {/* Search */}
           <div className="mb-6">
             <SearchBar onSearch={search} isLoading={isLoading} lang={lang} />
           </div>
 
-          {/* Quick chips */}
           {!results && !isLoading && (
             <div className="flex flex-wrap justify-center gap-2">
               {(lang === "ar"
-                ? ["دورة بايثون مجانية بشهادة", "علم البيانات أقل من 20$", "شهادة تسويق رقمي", "تعلم الآلة للمبتدئين"]
-                : ["Free Python course with certificate", "Data Science under $20", "Digital marketing certification", "Machine learning for beginners", "NVIDIA deep learning free"]
+                ? ["دورة بايثون مجانية بشهادة", "علم البيانات أقل من 20$", "شهادة تسويق رقمي", "تعلم الآلة", "NVIDIA deep learning"]
+                : ["Free Python course with certificate", "Data Science under $20", "Digital marketing certification", "Machine learning", "NVIDIA deep learning free", "UX design Google"]
               ).map((ex) => (
                 <button
                   key={ex}
@@ -96,72 +97,63 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== ERROR ===== */}
       {error && (
-        <div className="mx-auto max-w-5xl px-4 pt-6">
+        <div className="mx-auto max-w-6xl px-4 pt-6">
           <div className="rounded-xl bg-red-50 px-5 py-4 text-sm text-red-700 shadow-sm">{error}</div>
         </div>
       )}
 
-      {/* ===== RESULTS ===== */}
       {results && (
-        <section className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+        <section className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
           <FilterBar filters={filters} onChange={setFilters} lang={lang} />
           <GrabCardList results={filteredResults!} lang={lang} />
         </section>
       )}
 
-      {/* ===== LOADING ===== */}
       {isLoading && (
-        <section className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+        <section className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                <div className="shimmer mb-3 h-4 w-16 rounded" />
-                <div className="shimmer mb-2 h-6 w-full rounded" />
-                <div className="shimmer mb-4 h-6 w-3/4 rounded" />
-                <div className="mb-4 flex gap-2">
-                  <div className="shimmer h-5 w-14 rounded-full" />
-                  <div className="shimmer h-5 w-18 rounded-full" />
-                  <div className="shimmer h-5 w-12 rounded-full" />
+              <div key={i} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                <div className="shimmer h-32" />
+                <div className="p-4">
+                  <div className="shimmer mb-2 h-4 w-20 rounded" />
+                  <div className="shimmer mb-2 h-5 w-full rounded" />
+                  <div className="shimmer mb-3 h-5 w-3/4 rounded" />
+                  <div className="flex gap-1.5">
+                    <div className="shimmer h-5 w-14 rounded-full" />
+                    <div className="shimmer h-5 w-18 rounded-full" />
+                  </div>
                 </div>
-                <div className="shimmer h-11 w-full rounded-xl" />
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* ===== GOLDEN OFFERS ===== */}
       <OffersSection lang={lang} />
-
-      {/* ===== TRENDING ===== */}
       <TrendingSection lang={lang} />
-
-      {/* ===== RESUME AI ===== */}
       <ResumeUpload lang={lang} />
 
-      {/* ===== TRUST SECTION ===== */}
+      {/* Trust section */}
       <section className="border-t border-gray-100 bg-white py-10 sm:py-12" dir={lang === "ar" ? "rtl" : "ltr"}>
-        <div className="mx-auto max-w-5xl px-4 text-center">
+        <div className="mx-auto max-w-6xl px-4 text-center">
           <h2 className="font-display mb-2 text-xl font-bold text-gray-900 sm:text-2xl">{t("trust.title", lang)}</h2>
-          <p className="mb-6 text-xs text-gray-400 sm:mb-8">{t("trust.secure", lang)}</p>
-          <div className="grid grid-cols-3 gap-4 sm:grid-cols-6 sm:gap-8">
+          <p className="mb-6 text-xs text-gray-400">{t("trust.secure", lang)}</p>
+          <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-8">
             {[
-              { name: "NVIDIA", color: "provider-nvidia" },
-              { name: "Google", color: "provider-google" },
-              { name: "IBM", color: "provider-ibm" },
-              { name: "Meta", color: "provider-meta" },
-              { name: "Coursera", color: "provider-coursera" },
-              { name: "Udemy", color: "provider-udemy" },
+              { name: "NVIDIA", c: "text-[#76b900]" }, { name: "Google", c: "text-[#4285f4]" },
+              { name: "IBM", c: "text-[#0f62fe]" }, { name: "Meta", c: "text-[#0668e1]" },
+              { name: "Coursera", c: "text-[#0056d2]" }, { name: "Udemy", c: "text-[#a435f0]" },
+              { name: "HubSpot", c: "text-orange-500" }, { name: "AWS", c: "text-[#ff9900]" },
             ].map((p) => (
               <div key={p.name} className="flex flex-col items-center gap-1">
-                <span className={`text-sm font-bold sm:text-lg ${p.color}`}>{p.name}</span>
-                <div className="flex items-center gap-1">
-                  <svg className="h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <span className={`text-xs font-bold sm:text-sm ${p.c}`}>{p.name}</span>
+                <div className="flex items-center gap-0.5">
+                  <svg className="h-2.5 w-2.5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-[10px] text-green-600">{t("verified", lang)}</span>
+                  <span className="text-[9px] text-green-600">{t("verified", lang)}</span>
                 </div>
               </div>
             ))}
@@ -169,7 +161,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== FOOTER ===== */}
       <AffiliateFooter lang={lang} />
     </div>
   );
@@ -188,6 +179,9 @@ function applyFilters(results: Record<Bucket, GrabCardData[]>, filters: Filters)
 
     if (filters.certificate === "yes") cards = cards.filter((c) => c.hasCertificate);
     else if (filters.certificate === "no") cards = cards.filter((c) => !c.hasCertificate);
+
+    if (filters.category !== "all") cards = cards.filter((c) => c.category === filters.category);
+    if (filters.level !== "all") cards = cards.filter((c) => c.level === filters.level);
 
     cards.sort((a, b) => {
       switch (filters.sortBy) {

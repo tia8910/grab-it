@@ -1,11 +1,14 @@
 "use client";
 
-import { Lang } from "@/lib/types";
+import { Lang, Category, Level, CATEGORY_META } from "@/lib/types";
 import { t } from "@/lib/i18n";
+import { trackFilter } from "@/lib/analytics";
 
 export type Filters = {
   price: "all" | "free" | "paid";
   certificate: "all" | "yes" | "no";
+  category: "all" | Category;
+  level: "all" | Level;
   sortBy: "value" | "rating" | "price-low" | "price-high";
 };
 
@@ -16,10 +19,17 @@ interface Props {
 }
 
 export default function FilterBar({ filters, onChange, lang }: Props) {
-  const set = (p: Partial<Filters>) => onChange({ ...filters, ...p });
+  const set = (p: Partial<Filters>) => {
+    const key = Object.keys(p)[0];
+    if (key) trackFilter(key, String(Object.values(p)[0]));
+    onChange({ ...filters, ...p });
+  };
+
+  const categories = Object.entries(CATEGORY_META) as [Category, typeof CATEGORY_META[Category]][];
 
   return (
-    <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-4" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="mb-8 space-y-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm sm:p-4" dir={lang === "ar" ? "rtl" : "ltr"}>
+      {/* Row 1: AI Filter label + price + certificate */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1">
           <svg className="h-3.5 w-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -51,14 +61,51 @@ export default function FilterBar({ filters, onChange, lang }: Props) {
           onChange={(v) => set({ certificate: v as Filters["certificate"] })}
           color="purple"
         />
+
+        <div className="hidden h-5 w-px bg-gray-200 sm:block" />
+
+        {/* Level */}
+        <Toggle
+          options={[
+            { value: "all", label: t("filter.all", lang) },
+            { value: "beginner", label: lang === "ar" ? "مبتدئ" : "Beginner" },
+            { value: "intermediate", label: lang === "ar" ? "متوسط" : "Intermediate" },
+            { value: "advanced", label: lang === "ar" ? "متقدم" : "Advanced" },
+          ]}
+          selected={filters.level}
+          onChange={(v) => set({ level: v as Filters["level"] })}
+          color="indigo"
+        />
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t("filter.sort", lang)}</span>
+      {/* Row 2: Categories + Sort */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => set({ category: "all" })}
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+              filters.category === "all" ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+            }`}
+          >
+            {t("filter.all", lang)}
+          </button>
+          {categories.map(([key, meta]) => (
+            <button
+              key={key}
+              onClick={() => set({ category: key })}
+              className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+                filters.category === key ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              {meta.icon} {lang === "ar" ? meta.labelAr : meta.label}
+            </button>
+          ))}
+        </div>
+
         <select
           value={filters.sortBy}
           onChange={(e) => set({ sortBy: e.target.value as Filters["sortBy"] })}
-          className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+          className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 focus:border-indigo-300 focus:outline-none"
         >
           <option value="value">{t("sort.value", lang)}</option>
           <option value="rating">{t("sort.rating", lang)}</option>
@@ -83,7 +130,9 @@ function Toggle({ options, selected, onChange, color }: {
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-all sm:px-3 ${selected === o.value ? active : "text-gray-500 hover:text-gray-700"}`}
+          className={`rounded-md px-2 py-1 text-[11px] font-medium transition-all sm:px-2.5 ${
+            selected === o.value ? active : "text-gray-500 hover:text-gray-700"
+          }`}
         >
           {o.label}
         </button>
